@@ -7,10 +7,8 @@ it("calls vatapi.com correctly", () => {
     },
   };
 
-  const fakeFetch = (url, opts) => {
-    expect(opts.headers.apikey).toBe("key123");
-    expect(url).toBe("https://vatapi.com/v1/country-code-check?code=DE");
-    return Promise.resolve({
+  const fakeFetch = jest.fn().mockReturnValue(
+    Promise.resolve({
       json: () =>
         Promise.resolve({
           rates: {
@@ -19,13 +17,17 @@ it("calls vatapi.com correctly", () => {
             },
           },
         }),
-    });
-  };
+    })
+  );
   return orderTotal(fakeFetch, fakeProces, {
     country: "DE",
     items: [{ name: "Dragon waffles", price: 20, quantity: 2 }],
   }).then((result) => {
     expect(result).toBe(20 * 2 * 1.19);
+    expect(fakeFetch).toBeCalledWith(
+      "https://vatapi.com/v1/country-code-check?code=DE",
+      { headers: { apikey: "key123" } }
+    );
   });
 });
 
